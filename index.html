@@ -6,6 +6,9 @@
     <title>Table Export to Excel</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 </head>
 <body>
     <div class="container my-4">
@@ -17,7 +20,7 @@
                     <th>นลย.1</th>
                     <th>นลย.2</th>
                     <th>นลย.3</th>
-                    <!-- เพิ่มหัวข้อเพิ่มเติมที่นี่ -->
+                    <th>แสดงกราฟ</th>
                 </tr>
             </thead>
             <tbody>
@@ -26,7 +29,7 @@
                     <td>123</td>
                     <td>456</td>
                     <td>789</td>
-                    <!-- เพิ่มข้อมูลเพิ่มเติมที่นี่ -->
+                    <td><button class="btn btn-primary showGraphBtn">Show Graph</button></td>
                 </tr>
                 <!-- เพิ่มแถวเพิ่มเติมที่นี่ -->
             </tbody>
@@ -34,7 +37,23 @@
         <button id="exportBtn" class="btn btn-primary">Export to Excel</button>
     </div>
 
+    <!-- Modal สำหรับแสดงกราฟ -->
+    <div class="modal fade" id="graphModal" tabindex="-1" aria-labelledby="graphModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="graphModalLabel">กราฟการใช้น้ำ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="chartdiv" style="width: 100%; height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Export to Excel
         document.getElementById('exportBtn').addEventListener('click', function () {
             let data = [];
             let table = document.getElementById('dataTable');
@@ -54,6 +73,81 @@
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
             XLSX.writeFile(workbook, 'data.xlsx');
         });
+
+        // Show Graph in Modal
+        document.querySelectorAll('.showGraphBtn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                let row = this.closest('tr');
+                let data = {
+                    "นลย.1": parseFloat(row.cells[1].innerText),
+                    "นลย.2": parseFloat(row.cells[2].innerText),
+                    "นลย.3": parseFloat(row.cells[3].innerText)
+                };
+
+                showGraph(data);
+                let graphModal = new bootstrap.Modal(document.getElementById('graphModal'));
+                graphModal.show();
+            });
+        });
+
+        // ฟังก์ชันสำหรับแสดงกราฟ
+        function showGraph(data) {
+            // ล้างกราฟเก่า
+            am5.array.each(am5.registry.rootElements, function(root) {
+                if (root.dom.id === "chartdiv") {
+                    root.dispose();
+                }
+            });
+
+            // สร้างกราฟใหม่
+            let root = am5.Root.new("chartdiv");
+
+            root.setThemes([
+                am5themes_Animated.new(root)
+            ]);
+
+            let chart = root.container.children.push(
+                am5xy.XYChart.new(root, {
+                    panX: true,
+                    panY: true,
+                    wheelX: "panX",
+                    wheelY: "zoomX",
+                    pinchZoomX: true
+                })
+            );
+
+            let xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
+                categoryField: "month",
+                renderer: am5xy.AxisRendererX.new(root, {})
+            }));
+
+            let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+                renderer: am5xy.AxisRendererY.new(root, {})
+            }));
+
+            let series = chart.series.push(am5xy.LineSeries.new(root, {
+                name: "Usage",
+                xAxis: xAxis,
+                yAxis: yAxis,
+                valueYField: "value",
+                categoryXField: "month",
+                tooltip: am5.Tooltip.new(root, {
+                    labelText: "{valueY}"
+                })
+            }));
+
+            series.data.setAll([
+                { "month": "นลย.1", "value": data["นลย.1"] },
+                { "month": "นลย.2", "value": data["นลย.2"] },
+                { "month": "นลย.3", "value": data["นลย.3"] }
+            ]);
+
+            series.appear(1000);
+            chart.appear(1000, 100);
+        }
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 </body>
 </html>
