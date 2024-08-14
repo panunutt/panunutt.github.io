@@ -91,60 +91,80 @@
         });
 
         // ฟังก์ชันสำหรับแสดงกราฟ
-        function showGraph(data) {
-            // ล้างกราฟเก่า
-            am5.array.each(am5.registry.rootElements, function(root) {
-                if (root.dom.id === "chartdiv") {
-                    root.dispose();
-                }
-            });
-
-            // สร้างกราฟใหม่
-            let root = am5.Root.new("chartdiv");
-
-            root.setThemes([
-                am5themes_Animated.new(root)
-            ]);
-
-            let chart = root.container.children.push(
-                am5xy.XYChart.new(root, {
-                    panX: true,
-                    panY: true,
-                    wheelX: "panX",
-                    wheelY: "zoomX",
-                    pinchZoomX: true
-                })
-            );
-
-            let xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
-                categoryField: "month",
-                renderer: am5xy.AxisRendererX.new(root, {})
-            }));
-
-            let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
-                renderer: am5xy.AxisRendererY.new(root, {})
-            }));
-
-            let series = chart.series.push(am5xy.LineSeries.new(root, {
-                name: "Usage",
-                xAxis: xAxis,
-                yAxis: yAxis,
-                valueYField: "value",
-                categoryXField: "month",
-                tooltip: am5.Tooltip.new(root, {
-                    labelText: "{valueY}"
-                })
-            }));
-
-            series.data.setAll([
-                { "month": "นลย.1", "value": data["นลย.1"] },
-                { "month": "นลย.2", "value": data["นลย.2"] },
-                { "month": "นลย.3", "value": data["นลย.3"] }
-            ]);
-
-            series.appear(1000);
-            chart.appear(1000, 100);
+// ฟังก์ชันสำหรับแสดงกราฟ
+function showGraph(data) {
+    // ล้างกราฟเก่า
+    am5.array.each(am5.registry.rootElements, function(root) {
+        if (root.dom.id === "chartdiv") {
+            root.dispose();
         }
+    });
+
+    // สร้างกราฟใหม่
+    let root = am5.Root.new("chartdiv");
+
+    root.setThemes([
+        am5themes_Animated.new(root)
+    ]);
+
+    let chart = root.container.children.push(
+        am5xy.XYChart.new(root, {
+            panX: true,
+            panY: true,
+            wheelX: "panX",
+            wheelY: "zoomX",
+            pinchZoomX: true
+        })
+    );
+
+    // สร้างแกน X
+    let xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
+        categoryField: "month",
+        renderer: am5xy.AxisRendererX.new(root, {})
+    }));
+
+    // ตั้งค่า label ของแกน X
+    xAxis.get("renderer").labels.template.setAll({
+        fontSize: 12,
+        rotation: -45,
+        centerY: am5.p50,
+        centerX: am5.p100
+    });
+
+    // สร้างแกน Y
+    let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {})
+    }));
+
+    // สร้าง series สำหรับกราฟ
+    let series = chart.series.push(am5xy.LineSeries.new(root, {
+        name: "Usage",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "value",
+        categoryXField: "month",
+        tooltip: am5.Tooltip.new(root, {
+            labelText: "{valueY}"
+        })
+    }));
+
+    // ตั้งค่าให้แสดงเส้นในกราฟ
+    series.strokes.template.setAll({
+        strokeWidth: 2
+    });
+
+    // ส่งข้อมูลให้ series
+    series.data.setAll([
+        { "month": "นลย.1", "value": data["นลย.1"] },
+        { "month": "นลย.2", "value": data["นลย.2"] },
+        { "month": "นลย.3", "value": data["นลย.3"] }
+    ]);
+
+    // ทำให้กราฟปรากฏขึ้น
+    series.appear(1000);
+    chart.appear(1000, 100);
+}
+
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
