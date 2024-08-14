@@ -23,9 +23,9 @@
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Department</th>
+                <th>รหัสผู้ใช้น้ำ</th>
+                <th>ที่อยู่</th>
+                <th>เลขมาตร</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -41,16 +41,16 @@
             <input type="text" id="id" class="form-control" required>
         </div>
         <div class="form-group">
-            <label for="name">Name:</label>
-            <input type="text" id="name" class="form-control" required>
+            <label for="custcode">รหัสผู้ใช้น้ำ:</label>
+            <input type="text" id="custcode" class="form-control" required>
         </div>
         <div class="form-group">
-            <label for="age">Age:</label>
-            <input type="number" id="age" class="form-control" required>
+            <label for="addr">ที่อยู่:</label>
+            <input type="text" id="addr" class="form-control" required>
         </div>
         <div class="form-group">
-            <label for="department">Department:</label>
-            <input type="text" id="department" class="form-control" required>
+            <label for="meterno">เลขมาตร:</label>
+            <input type="text" id="meterno" class="form-control" required>
         </div>
         <button type="submit" class="btn btn-primary">Save</button>
     </form>
@@ -67,10 +67,10 @@
         data.forEach((row, index) => {
             tableBody.innerHTML += `
                 <tr>
-                    <td>${row.ID}</td>
-                    <td>${row.Name}</td>
-                    <td>${row.Age}</td>
-                    <td>${row.Department}</td>
+                    <td>${row.id}</td>
+                    <td>${row.custcode}</td>
+                    <td>${row.addr}</td>
+                    <td>${row.meterno}</td>
                     <td>
                         <button class="btn btn-warning btn-sm" onclick="editData(${index})">Edit</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteData(${index})">Delete</button>
@@ -101,12 +101,12 @@
     document.getElementById('data-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const id = document.getElementById('id').value;
-        const name = document.getElementById('name').value;
-        const age = document.getElementById('age').value;
-        const department = document.getElementById('department').value;
+        const custcode = document.getElementById('custcode').value;
+        const addr = document.getElementById('addr').value;
+        const meterno = document.getElementById('meterno').value;
         const editIndex = document.getElementById('edit-index').value;
 
-        const rowData = {ID: id, Name: name, Age: age, Department: department};
+        const rowData = {id: id, custcode: custcode, addr: addr, meterno: meterno};
 
         if (editIndex === '') {
             data.push(rowData);
@@ -123,9 +123,9 @@
     function editData(index) {
         const row = data[index];
         document.getElementById('id').value = row.ID;
-        document.getElementById('name').value = row.Name;
-        document.getElementById('age').value = row.Age;
-        document.getElementById('department').value = row.Department;
+        document.getElementById('custcode').value = row.custcode;
+        document.getElementById('addr').value = row.addr;
+        document.getElementById('meterno').value = row.meterno;
         document.getElementById('edit-index').value = index;
     }
 
