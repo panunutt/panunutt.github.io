@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แสดงกราฟใน Modal</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- amCharts 4 -->
+    <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+    <script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
+    <script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+    <!-- Custom CSS for hiding columns -->
+    <style>
+        /* ซ่อนคอลัมน์ 11 ถึง 22 */
+        #excelTable th:nth-child(11),
+        #excelTable th:nth-child(12),
+        #excelTable th:nth-child(13),
+        #excelTable th:nth-child(14),
+        #excelTable th:nth-child(15),
+        #excelTable th:nth-child(16),
+        #excelTable th:nth-child(17),
+        #excelTable th:nth-child(18),
+        #excelTable th:nth-child(19),
+        #excelTable th:nth-child(20),
+        #excelTable th:nth-child(21),
+        #excelTable th:nth-child(22),
+        #excelTable td:nth-child(11),
+        #excelTable td:nth-child(12),
+        #excelTable td:nth-child(13),
+        #excelTable td:nth-child(14),
+        #excelTable td:nth-child(15),
+        #excelTable td:nth-child(16),
+        #excelTable td:nth-child(17),
+        #excelTable td:nth-child(18),
+        #excelTable td:nth-child(19),
+        #excelTable td:nth-child(20),
+        #excelTable td:nth-child(21),
+        #excelTable td:nth-child(22) {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">อัปโหลดไฟล์ Excel เพื่อแสดงข้อมูล</h2>
+        <input type="file" id="inputExcel" class="form-control mb-3" accept=".xlsx, .xls">
+
+        <table class="table table-bordered" id="excelTable">
+            <thead>
+                <tr>
+                    <th>custcode</th>
+                    <th>type</th>
+                    <th>addr</th>
+                    <th>meterno</th>
+                    <th>ยี่ห้อมาตรฯ</th>
+                    <th>ขนาดมาตรฯ</th>
+                    <th>วันที่เริ่มเป็นผู้ใช้น้ำ</th>
+                    <th>วันที่เริ่มใช้มาตรฯ</th>
+                    <th>หน่วยน้ำใช้เฉลี่ย</th>
+                    <th>หน่วยน้ำใช้ปัจจุบัน</th>
+                    <th>นยล.1</th>
+                    <th>นยล.2</th>
+                    <th>นยล.3</th>
+                    <th>นยล.4</th>
+                    <th>นยล.5</th>
+                    <th>นยล.6</th>
+                    <th>นยล.7</th>
+                    <th>นยล.8</th>
+                    <th>นยล.9</th>
+                    <th>นยล.10</th>
+                    <th>นยล.11</th>
+                    <th>นยล.12</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">รายละเอียดผู้ใช้น้ำ - กราฟแสดงข้อมูล</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="chartdiv" style="width: 100%; height: 500px;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+    <!-- xlsx.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        document.getElementById('inputExcel').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                // อ่าน sheet แรก
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                // ลบข้อมูลเก่าออก
+                const tbody = document.querySelector('#excelTable tbody');
+                tbody.innerHTML = '';
+
+                // วนลูปสร้างแถวข้อมูล
+                rows.forEach((row, index) => {
+                    if (index === 0) return; // ข้ามแถว header
+
+                    const tr = document.createElement('tr');
+                    row.forEach((cell, i) => {
+                        const td = document.createElement('td');
+                        td.textContent = cell || ''; // กำหนดค่าในเซลล์
+                        tr.appendChild(td);
+                    });
+
+                    // เพิ่มปุ่มในคอลัมน์สุดท้าย
+                    const actionTd = document.createElement('td');
+                    const button = document.createElement('button');
+                    button.className = 'btn btn-primary';
+                    button.textContent = 'รายละเอียด';
+                    button.setAttribute('data-bs-toggle', 'modal');
+                    button.setAttribute('data-bs-target', '#detailModal');
+                    button.setAttribute('data-id', row[0]); // ใช้ custcode เป็น ID
+                    button.addEventListener('click', function () {
+                        // ดึงข้อมูลจากคอลัมน์ 11 ถึง 22
+                        const chartData = [
+                            { category: 'นยล.1', value: row[10] || 0 },
+                            { category: 'นยล.2', value: row[11] || 0 },
+                            { category: 'นยล.3', value: row[12] || 0 },
+                            { category: 'นยล.4', value: row[13] || 0 },
+                            { category: 'นยล.5', value: row[14] || 0 },
+                            { category: 'นยล.6', value: row[15] || 0 },
+                            { category: 'นยล.7', value: row[16] || 0 },
+                            { category: 'นยล.8', value: row[17] || 0 },
+                            { category: 'นยล.9', value: row[18] || 0 },
+                            { category: 'นยล.10', value: row[19] || 0 },
+                            { category: 'นยล.11', value: row[20] || 0 },
+                            { category: 'นยล.12', value: row[21] || 0 }
+                        ];
+
+                        createChart(chartData);
+                    });
+                    actionTd.appendChild(button);
+                    tr.appendChild(actionTd);
+
+                    tbody.appendChild(tr);
+                });
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        // ฟังก์ชันสร้างกราฟ
+        function createChart(data) {
+            am4core.ready(function () {
+                // ใช้ธีม animated
+                am4core.useTheme(am4themes_animated);
+
+                // สร้าง instance ของ Chart
+                let chart = am4core.create("chartdiv", am4charts.XYChart);
+
+                chart.data = data;
+
+                // สร้าง Category Axis
+                let categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+                categoryAxis.dataFields.category = "category";
+                categoryAxis.renderer.grid.template.location = 0;
+                categoryAxis.renderer.minGridDistance = 30;
+
+                // สร้าง Value Axis
+                let valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+
+                // สร้าง Series
+                let series = chart.series.push(new am4charts.ColumnSeries());
+                series.dataFields.valueY = "value";
+                series.dataFields.categoryX = "category";
+                series.name = "Value";
+                series.columns.template.tooltipText = "{categoryX}: [bold]{valueY}[/]";
+                series.columns.template.fillOpacity = 0.8;
+
+                let columnTemplate = series.columns.template;
+                columnTemplate.strokeWidth = 2;
+                columnTemplate.strokeOpacity = 1;
+
+                // ทำลายกราฟเมื่อ modal ถูกปิด
+                document.getElementById('detailModal').addEventListener('hidden.bs.modal', function () {
+                    chart.dispose();
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>
