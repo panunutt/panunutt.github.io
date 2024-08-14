@@ -1,139 +1,157 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Data Management</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Water Usage Table with Graph</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-<div class="container">
-    <h2>Excel Data Management</h2>
-
-    <!-- Upload Excel File -->
-    <div class="form-group">
-        <label for="upload">Upload Excel File:</label>
-        <input type="file" id="upload" class="form-control-file" />
+    <div class="container mt-5">
+        <h1 class="mb-4">Water Usage Data</h1>
+        <table id="data-table" class="table table-bordered">
+            <thead>
+                <!-- Table Headers will be inserted here by JavaScript -->
+            </thead>
+            <tbody>
+                <!-- Table Data will be inserted here by JavaScript -->
+            </tbody>
+        </table>
     </div>
 
-    <!-- Table to display data -->
-    <table id="data-table" class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>รหัสผู้ใช้น้ำ</th>
-                <th>ที่อยู่</th>
-                <th>เลขมาตร</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
+    <!-- Modal for showing graph -->
+    <div class="modal fade" id="graphModal" tabindex="-1" aria-labelledby="graphModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="graphModalLabel">Water Usage Graph</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="chartdiv" style="width: 100%; height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+    <script >
+document.addEventListener("DOMContentLoaded", function () {
+    const excelFilePath = '/mnt/data/20240814_10.xlsx';
     
-    <!-- Form for Adding/Editing Data -->
-    <form id="data-form">
-        <input type="hidden" id="edit-index" value="">
-        <div class="form-group">
-            <label for="id">ID:</label>
-            <input type="text" id="id" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="custcode">รหัสผู้ใช้น้ำ:</label>
-            <input type="text" id="custcode" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="addr">ที่อยู่:</label>
-            <input type="text" id="addr" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="meterno">เลขมาตร:</label>
-            <input type="text" id="meterno" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Save</button>
-    </form>
-</div>
+    function readExcel(file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            displayTable(jsonData);
+        };
+        reader.readAsArrayBuffer(file);
+    }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-<script>
-    let data = [];
+    function displayTable(data) {
+        const tableHead = document.querySelector("#data-table thead");
+        const tableBody = document.querySelector("#data-table tbody");
+        
+        // Create table headers
+        let headers = "<tr>";
+        data[0].forEach(header => {
+            headers += `<th>${header}</th>`;
+        });
+        headers += "<th>Graph</th></tr>";
+        tableHead.innerHTML = headers;
 
-    // Function to display data in the table
-    function displayData() {
-        const tableBody = document.querySelector('#data-table tbody');
-        tableBody.innerHTML = '';
-        data.forEach((row, index) => {
-            tableBody.innerHTML += `
-                <tr>
-                    <td>${row.id}</td>
-                    <td>${row.custcode}</td>
-                    <td>${row.addr}</td>
-                    <td>${row.meterno}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm" onclick="editData(${index})">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteData(${index})">Delete</button>
-                    </td>
-                </tr>
-            `;
+        // Create table rows
+        data.slice(1).forEach((row, rowIndex) => {
+            let rowData = "<tr>";
+            row.forEach(cell => {
+                rowData += `<td>${cell}</td>`;
+            });
+            rowData += `<td><button class="btn btn-primary show-graph-btn" data-row="${rowIndex}">Show Graph</button></td>`;
+            rowData += "</tr>";
+            tableBody.innerHTML += rowData;
+        });
+
+        // Add event listeners for graph buttons
+        document.querySelectorAll('.show-graph-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const rowIndex = this.getAttribute('data-row');
+                showGraph(data[0], data[parseInt(rowIndex) + 1]);
+            });
         });
     }
 
-    // Handle file upload and parse Excel file
-    document.getElementById('upload').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-
-        reader.onload = (e) => {
-            let data = new Uint8Array(e.target.result);
-            let workbook = XLSX.read(data, {type: 'array'});
-            let firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            let jsonData = XLSX.utils.sheet_to_json(firstSheet);
-            data = jsonData;
-            displayData();
-        };
-
-        reader.readAsArrayBuffer(file);
-    });
-
-    // Handle form submission to add/edit data
-    document.getElementById('data-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const id = document.getElementById('id').value;
-        const custcode = document.getElementById('custcode').value;
-        const addr = document.getElementById('addr').value;
-        const meterno = document.getElementById('meterno').value;
-        const editIndex = document.getElementById('edit-index').value;
-
-        const rowData = {id: id, custcode: custcode, addr: addr, meterno: meterno};
-
-        if (editIndex === '') {
-            data.push(rowData);
-        } else {
-            data[editIndex] = rowData;
-            document.getElementById('edit-index').value = '';
+    function showGraph(headers, rowData) {
+        const usageData = [];
+        for (let i = 1; i <= 12; i++) {
+            usageData.push({
+                month: headers[headers.indexOf(`นลย. ${i}`)],
+                value: rowData[headers.indexOf(`นลย. ${i}`)]
+            });
         }
 
-        displayData();
-        document.getElementById('data-form').reset();
-    });
+        am5.ready(function () {
+            let root = am5.Root.new("chartdiv");
+            root.setThemes([am5themes_Animated.new(root)]);
 
-    // Edit data function
-    function editData(index) {
-        const row = data[index];
-        document.getElementById('id').value = row.ID;
-        document.getElementById('custcode').value = row.custcode;
-        document.getElementById('addr').value = row.addr;
-        document.getElementById('meterno').value = row.meterno;
-        document.getElementById('edit-index').value = index;
+            let chart = root.container.children.push(am5xy.XYChart.new(root, {
+                panX: true,
+                panY: true,
+                wheelX: "panX",
+                wheelY: "zoomX",
+                pinchZoomX: true
+            }));
+
+            let xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
+                categoryField: "month",
+                renderer: am5xy.AxisRendererX.new(root, {}),
+                tooltip: am5.Tooltip.new(root, {})
+            }));
+
+            let yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+                renderer: am5xy.AxisRendererY.new(root, {})
+            }));
+
+            let series = chart.series.push(am5xy.LineSeries.new(root, {
+                name: "Water Usage",
+                xAxis: xAxis,
+                yAxis: yAxis,
+                valueYField: "value",
+                categoryXField: "month",
+                tooltip: am5.Tooltip.new(root, {
+                    labelText: "{valueY}"
+                })
+            }));
+
+            xAxis.data.setAll(usageData);
+            series.data.setAll(usageData);
+
+            series.appear(1000);
+            chart.appear(1000, 100);
+        });
+
+        // Show the modal
+        const graphModal = new bootstrap.Modal(document.getElementById('graphModal'));
+        graphModal.show();
     }
 
-    // Delete data function
-    function deleteData(index) {
-        data.splice(index, 1);
-        displayData();
-    }
-</script>
+    fetch(excelFilePath)
+        .then(response => response.blob())
+        .then(blob => {
+            readExcel(blob);
+        });
+});
+
+
+
+
+        
+    </script>
 </body>
 </html>
