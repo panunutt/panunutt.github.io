@@ -1,1 +1,139 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Data Management</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container">
+    <h2>Excel Data Management</h2>
+
+    <!-- Upload Excel File -->
+    <div class="form-group">
+        <label for="upload">Upload Excel File:</label>
+        <input type="file" id="upload" class="form-control-file" />
+    </div>
+
+    <!-- Table to display data -->
+    <table id="data-table" class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Department</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    
+    <!-- Form for Adding/Editing Data -->
+    <form id="data-form">
+        <input type="hidden" id="edit-index" value="">
+        <div class="form-group">
+            <label for="id">ID:</label>
+            <input type="text" id="id" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="age">Age:</label>
+            <input type="number" id="age" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="department">Department:</label>
+            <input type="text" id="department" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+<script>
+    let data = [];
+
+    // Function to display data in the table
+    function displayData() {
+        const tableBody = document.querySelector('#data-table tbody');
+        tableBody.innerHTML = '';
+        data.forEach((row, index) => {
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${row.ID}</td>
+                    <td>${row.Name}</td>
+                    <td>${row.Age}</td>
+                    <td>${row.Department}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editData(${index})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteData(${index})">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // Handle file upload and parse Excel file
+    document.getElementById('upload').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+            data = jsonData;
+            displayData();
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+
+    // Handle form submission to add/edit data
+    document.getElementById('data-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = document.getElementById('id').value;
+        const name = document.getElementById('name').value;
+        const age = document.getElementById('age').value;
+        const department = document.getElementById('department').value;
+        const editIndex = document.getElementById('edit-index').value;
+
+        const rowData = {ID: id, Name: name, Age: age, Department: department};
+
+        if (editIndex === '') {
+            data.push(rowData);
+        } else {
+            data[editIndex] = rowData;
+            document.getElementById('edit-index').value = '';
+        }
+
+        displayData();
+        document.getElementById('data-form').reset();
+    });
+
+    // Edit data function
+    function editData(index) {
+        const row = data[index];
+        document.getElementById('id').value = row.ID;
+        document.getElementById('name').value = row.Name;
+        document.getElementById('age').value = row.Age;
+        document.getElementById('department').value = row.Department;
+        document.getElementById('edit-index').value = index;
+    }
+
+    // Delete data function
+    function deleteData(index) {
+        data.splice(index, 1);
+        displayData();
+    }
+</script>
+</body>
+</html>
