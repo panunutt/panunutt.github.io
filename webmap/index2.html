@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,  width=device-width, height=device-height" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes/">
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Web Map" />
+    <meta name="author" content="" />
+    <meta name="keywords" content="Web Map" />
+    <title>WEB MAP</title>
+
+    <!-- icon shotcut-->
+    <link rel="icon" href="favicon.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        /* html, */
+        /* body {
+            height: 100%;
+            width: 100vw;
+        } */
+
+        #map {
+            height: 80vh;
+            width: 100vw;
+        }
+
+        main {
+            padding: 60px 0 0;
+        }
+    </style>
+
+    <style>
+        /*-------custom scrollbar------------*/
+        .scroller {
+            overflow-y: auto;
+            overflow-x: clip;
+            /*scrollbar-width: thin*/
+            ;
+        }
+
+        /* Works on Firefox */
+        * {
+            scrollbar-width: thin;
+            /*scrollbar-color: blue orange;*/
+            scrollbar-color: rgb(64, 147, 255) white;
+        }
+
+        /* Works on Chrome, Edge, and Safari */
+        *::-webkit-scrollbar {
+            /*width: 12px;*/
+            width: 5px;
+        }
+
+        *::-webkit-scrollbar-track {
+            /*background: orange;*/
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: #a7a7a770;
+            border-radius: 5px;
+            /*
+              background-color: blue;
+              border-radius: 20px;
+              border: 3px solid orange;*/
+        }
+
+        /*-------custom scrollbar------------*/
+    </style>
+
+
+    <style>
+        #txt_detail_share::placeholder {
+            /* Chrome, Firefox, Opera, Safari 10.1+ */
+            color: red;
+            opacity: 0.4;
+            /* Firefox */
+        }
+
+        #txt_detail_share:-ms-input-placeholder {
+            /* Internet Explorer 10-11 */
+            color: red;
+        }
+
+        #txt_detail_share::-ms-input-placeholder {
+            /* Microsoft Edge */
+            color: red;
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column h-100">
+
+    <header>
+        <!-- Fixed navbar -->
+        <nav class="navbar navbar-expand-md navbar-light fixed-top bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Web Map Application</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
+                    aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="javascript:void(0)">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="javascript:void(0)"
+                                onclick="$('#locationModal').modal('show')">Location</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="javascript:void(0)"
+                                onclick="$('#facedetactModal').modal('show')">Face Detection</a>
+                        </li>
+                        <!-- <li class="nav-item">
+                            <a class="nav-link disabled">Disabled</a>
+                        </li> -->
+                    </ul>
+                    <form class="d-flex" role="search">
+                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                        <button class="btn btn-outline-success" type="submit">Search</button>
+                    </form>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-shrink-0">
+        <div class="container-fluid px-0">
+            <div class="row g-0">
+                <div id="map"></div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <span class="text-muted">Place sticky footer content here.</span>
+        </div>
+    </footer>
+</body>
+
+<div class="modal fade" id="locationModal" style="z-index:4999;" tabindex="-1" aria-labelledby="locationModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="locationModalLabel">การแชร์ตำแหน่ง</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" placeholder="Username" aria-label="Username"
+                    aria-describedby="basic-addon1" value="myname">
+                <br>
+                คุณจะเห็นเพื่อนที่นี่เมื่อพวกเขาแชร์ตำแหน่งกับคุณ
+                <br>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="flexSwitchShare">
+                    <label class="form-check-label" for="flexSwitchShare">
+                        แชร์ตำแหน่งแบบเรียลไทม์ของคุณกับเพื่อนๆ</label>
+                </div>
+
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckShare">
+                    <label class="form-check-label"
+                        for="flexSwitchCheckShare">แสดงข้อมูลของเพื่อนที่แชร์ตำแหน่งให้คุณ</label>
+                    <input class="" type="number" value="15" min="15" id="timeintervalGetShare"> วินาที
+                </div>
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">แชร์ตำแหน่งและข้อมูล Line</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+
+                    <div class="form-group">
+                        <label class="col-sm-12" for="lba">พิกัด:</label>
+                        <div class="col-sm-12">
+                            <input type="text" class="form-control" id="txt_latlng_share">
+                        </div>
+
+                        <label class="col-sm-12" for="lba">Custcode:</label>
+                        <div class="col-sm-12">
+                            <input type="text" class="form-control" id="txt_custcode_share">
+                        </div>
+
+                        <label class="col-sm-12" for="share_detail">รายละเอียด:</label>
+                        <div class="col-sm-12">
+                            <textarea name="message" class="form-control" style="overflow:auto;resize:vertical"
+                                wrap="virtual" col="300" rows="5" id="txt_detail_share"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" id="check_txt">AI</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-primary" id="send_share">แชร์</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- helpdesk-->
+<div class="modal fade" id="helpdeskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">แจ้งปัญหาการใช้งาน</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+
+                    <div class="form-group">
+
+                        <label class="control-label col-sm-12" for="sys_type">หัวข้อ:</label>
+                        <div class="col-sm-12">
+                            <select name="list" class="form-control" id="sys_type" placeholder="โปรดระบุหัวข้อ">
+                                <option value="0" selected="selected">เลือกหัวข้อ</option>
+                                <option value="ข้อผิดพลาดของระบบ">ข้อผิดพลาดของระบบ</option>
+                                <option value="ความถูกต้องของข้อมูล">ความถูกต้องของข้อมูล</option>
+                                <option value="ขอเพิ่มเติมเงื่อนไข">ขอเพิ่มเติมเงื่อนไข</option>
+                                <option value="อื่นๆ">อื่นๆ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-12" for="req_detail">รายละเอียด:</label>
+                        <div class="col-sm-12">
+                            <textarea name="message" class="form-control" style="overflow:auto;resize:vertical"
+                                wrap="virtual" col="300" rows="5" id="txt_detail"></textarea>
+                        </div>
+                    </div>
+
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-info" id="send_problem">ส่ง</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="facedetactModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Face Detection บริการวิเคราะห์และรู้จำใบหน้า</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="row">
+                        <input type="file" name="imgFace" id="imgFace" accept="image/jpeg" onchange="previewFile()" />
+                    </div>
+                    <div class="row">
+                        <img name="imgFace" src="" height="100%" alt="Image preview...">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" id="btn_facedetect">ตรวจจับใบหน้า</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.8.17/jquery-ui.min.js"></script>
+
+<!-- <script src="assets/jquery/jquery-3.3.1.js?v=001"></script>	 -->
+<!-- <script src="assets/jquery-ui.js?v=001"></script> autocomplete -->
+<script src="assets/jquery.ui.touch-punch.js?v=001"></script> <!-- drageble for mobile-->
+
+<!-- <script src="assets/FileSaver.min.js?v=001"></script> export file	 -->
+
+
+<!--bootstrap-->
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
+
+<!-- <link rel="stylesheet" href="https://cdn.usebootstrap.com/bootstrap/latest/css/bootstrap.min.css"/> -->
+<!-- <script src="https://cdn.usebootstrap.com/bootstrap/latest/js/bootstrap.min.js"></script> -->
+
+<!-- font-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+
+
+<script src="assets/popper.min.js"></script>
+<!--
+	<link rel="stylesheet" href="assets/bootstrap5/bootstrap.min.css"/>
+	<script src="assets/bootstrap5/bootstrap.min.js"></script>
+
+	<link rel="stylesheet" href="assets/bootstrap5/css/bootstrap.css"/>
+	<script src="assets/bootstrap5/js/bootstrap.bundle.js"></script>	
+	-->
+
+
+<!--
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js" crossorigin=""></script>
+	-->
+<!--
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"/>
+	<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+	-->
+
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<!-- <link rel="stylesheet" href="plugin/leaflet1.6/leaflet.css"/> -->
+<!-- <script src="plugin/leaflet1.6/leaflet-src.js"></script> -->
+
+<script src="plugin/customcontrol/Leaflet.Control.Custom.js?v=20200225"></script>
+
+
+<link rel="stylesheet" href="plugin/grouplayercontrol/leaflet.groupedlayercontrol.css?v=001">
+<script src="plugin/grouplayercontrol/leaflet.groupedlayercontrol.js?v=001"></script>
+
+
+<link rel="stylesheet" href="plugin/zoominfo/L.Control.Zoominfo.css?v=001" />
+<script src="plugin/zoominfo/L.Control.Zoominfo.js?v=001"></script>
+
+
+<link rel="stylesheet" href="plugin/reticlescale/leaflet-reticle.css?v=001">
+<script src="plugin/reticlescale/leaflet-reticle.js?v=001"></script>
+
+
+<link rel="stylesheet" href="plugin/locate/dist_custom/L.Control.Locate.css?v=001" />
+<script src="plugin/locate/dist_custom/L.Control.Locate.js?v=001"></script>
+
+
+<link rel="stylesheet" href="plugin/easybutton/easy-button.css">
+<script src="plugin/easybutton/easy-button.js"></script>
+
+
+<script>
+    var detailtmp = '';
+
+
+    var map = L.map("map", {
+        minZoom: 5.00,
+        zoom: 6.00,
+        //center: [13.123236, 101.207514],  
+        zoomSnap: 0.25,
+        zoomDelta: 0.25,
+        wheelPxPerZoomLevel: 180,
+        zoomControl: false,
+        center: [13.901111, 100.752778],
+        //attributionControl: true,
+        //scrollWheelZoom: false,
+        /*
+            dragging: !L.Browser.mobile,
+            tap: !L.Browser.mobile,
+        */
+    });
+
+
+    var attributionControl = L.control({
+        position: "bottomright"
+    });
+    attributionControl.onAdd = function (map) {
+        var div = L.DomUtil.create("div", "leaflet-control-attribution");
+        div.innerHTML = "<span >พัฒนา โดย <a id='namemap' href='https://google.co.th/' target='_blank'> ชื่อผู้พัฒนา</a></span> <a style='cursor:pointer;' onclick='$(\"#helpdeskModal\").modal(\"show\"); $(\"#send_problem\").removeAttr(\"disabled\");$(\"#sys_type\").val(0);$(\"#txt_detail\").val(\"\");return false;'> | แจ้งปัญหา</a>";
+        return div;
+    };
+
+    map.addControl(attributionControl);
+
+
+
+    var zoomctrl = new L.Control.Zoominfo({ position: 'bottomright' }).addTo(map);
+    //var zoomctrl = new L.Control.Zoom({ position: 'bottomright' }).addTo(map);
+
+
+    var LocationMarker = L.Marker.extend({
+        initialize: function (latlng, options) {
+            L.Util.setOptions(this, options);
+            this._latlng = latlng;
+            this.createIcon();
+        },
+
+        createIcon: function () {
+            var opt = this.options;
+
+            var style = '';
+
+            if (opt.color !== undefined) {
+                style += 'stroke:' + opt.color + ';';
+            }
+            if (opt.weight !== undefined) {
+                style += 'stroke-width:' + opt.weight + ';';
+            }
+            if (opt.fillColor !== undefined) {
+                style += 'fill:' + opt.fillColor + ';';
+            }
+            if (opt.fillOpacity !== undefined) {
+                style += 'fill-opacity:' + opt.fillOpacity + ';';
+            }
+            if (opt.opacity !== undefined) {
+                style += 'opacity:' + opt.opacity + ';';
+            }
+
+            var icon = this._getIconSVG(opt, style);
+
+            this._locationIcon = L.divIcon({
+                className: icon.className,
+                html: icon.svg,
+                iconSize: [icon.w, icon.h],
+            });
+
+            this.setIcon(this._locationIcon);
+        },
+
+        _getIconSVG: function (options, style) {
+            var r = options.radius;
+            var w = options.weight;
+            var s = r + w;
+            var s2 = s * 2;
+            var svg = '<svg xmlns="https://www.w3.org/2000/svg" width="' + s2 + '" height="' + s2 + '" version="1.1" viewBox="-' + s + ' -' + s + ' ' + s2 + ' ' + s2 + '">' +
+                '<circle r="' + r + '" style="' + style + '" />' +
+                '</svg>';
+            return {
+                className: 'leaflet-control-locate-location',
+                svg: svg,
+                w: s2,
+                h: s2
+            };
+        },
+
+        setStyle: function (style) {
+            L.Util.setOptions(this, style);
+            this.createIcon();
+        }
+    });
+
+    var CompassMarker = LocationMarker.extend({
+        initialize: function (latlng, heading, options) {
+            L.Util.setOptions(this, options);
+            this._latlng = latlng;
+            this._heading = heading;
+            this.createIcon();
+            //alert(heading);
+        },
+
+        setHeading: function (heading) {
+            //alert(heading);
+            this._heading = heading;
+        },
+
+        _getIconSVG: function (options, style) {
+            var r = options.radius;
+            var w = (options.width + options.weight);
+            var h = (r + options.depth + options.weight) * 2;
+            var path = 'M0,0 l' + (options.width / 2) + ',' + options.depth + ' l-' + (w) + ',0 z';
+            var svgstyle = 'transform: rotate(' + this._heading + 'deg)';
+            var svg = '<svg xmlns="https://www.w3.org/2000/svg" width="' + (w) + '" height="' + h + '" version="1.1" viewBox="-' + (w / 2) + ' 0 ' + w + ' ' + h + '" style="' + svgstyle + '">' +
+                '<path d="' + path + '" style="' + style + '" />' +
+                '</svg>';
+            return {
+                className: 'leaflet-control-locate-heading',
+                svg: svg,
+                w: w,
+                h: h
+            };
+        },
+    });
+
+
+    var lc = L.control.locate({
+        position: 'bottomright',
+
+        strings: {
+            title: "ตำแหน่งปัจจุบัน",
+            metersUnit: "เมตร",
+            //feetUnit: "feet",
+            popup: "{latlng} <br>ระยะรัศมี {distance} {unit} จากตำแหน่งนี้",
+            outsideMapBoundsMsg: "ตำแหน่งของคุณออกนอกขอบเขตของแผนที่",
+        },
+        flyTo: false,
+        returnToPrevBounds: false,
+        cacheLocation: false,
+        enableHighAccuracy: true,
+        showPopup: true,
+        metric: true,
+
+        showCompass: true,
+        compassClass: CompassMarker,
+        compassStyle: {
+            fillColor: '#2A93EE',
+            fillOpacity: 1,
+            weight: 0,
+            color: '#fff',
+            opacity: 1,
+            radius: 9, // How far is the arrow is from the center of of the marker
+            width: 9, // Width of the arrow
+            depth: 6  // Length of the arrow
+        },
+        //followCompassStyle: {},
+        clickBehavior: { inView: 'stop', outOfView: 'setView', inViewNotFollowing: 'inView' },
+
+        locateOptions: {
+            //watch: true,  // if you overwrite this, visualization cannot be updated
+            //setView: false // have to set this to false because we have to
+            //setView: 1,
+            //setView: false, 'once', 'always', 'untilPan', or 'untilPanOrZoom',
+            //setView: always,
+            maxZoom: 17,//Infinity
+            timeout: 500,
+            maximumAge: 500,
+        },
+
+
+    }).addTo(map);
+
+    map.on('locationfound', function (evt) {
+        //console.log(evt.timestamp);
+        var accuracy = evt.accuracy;
+        var timestamp = evt.timestamp;
+        var latlng = evt.latlng;
+        console.log(latlng, accuracy, timestamp);
+
+        if ($('#flexSwitchShare').prop('checked') == true) {
+            console.log(latlng.lat, latlng.lng, accuracy, timestamp);
+            updatelocation('Online', latlng.lat, latlng.lng, accuracy, timestamp);
+        }
+
+    });
+
+
+
+
+    var scaleM = L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
+
+
+
+    const googleRoad = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 22.25,
+        maxNativeZoom: 22.25,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Tiles &copy; Google Maps &mdash; Source: Road'
+    }).addTo(map);
+    const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+        maxZoom: 21.25,
+        maxNativeZoom: 21.25,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Tiles &copy; Google Maps &mdash; Source: Hybrid'
+    });
+    const googleSat = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 21.25,
+        maxNativeZoom: 21.25,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Tiles &copy; Google Maps &mdash; Source: Satellite'
+    });
+    const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+        maxZoom: 22.25,
+        maxNativeZoom: 22.25,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Tiles &copy; Google Maps &mdash; Source: Terrain'
+    });
+
+    //layerControl.addOverlay(points,"<img src='img/office.png' width='17' height='17'>&nbsp;&nbsp;กปภ.เขต",'ชั้นข้อมูล GIS กปภ.');
+
+    var baseLayers = {
+        "Google Road": googleRoad,
+        "Google Terrain": googleTerrain,
+        "Google Sat": googleSat,
+        "Google Hybrid": googleHybrid
+    };
+
+    var groupedOverlays = {
+        /*
+      "ชั้นข้อมูล": {
+        "<img src='img/pwa.png' width='18' height='18' style='margin-top:-8px;'>&nbsp;ที่ตั้ง": office,
+      },
+        */
+    };
+
+    var layerControl = L.control.groupedLayers(baseLayers, groupedOverlays, {
+        collapsed: true, position: 'topright'
+    }).addTo(map);
+
+    //var layerControl = L.control.groupedLayers(baseLayers, groupedOverlays, {
+    //  collapsed: true, }).addTo(map);
+
+
+    var marker_arr = [];
+    var resultLayer = null;
+    var markerLayer = null;
+
+    var mp;
+
+
+    // L.easyButton('<img src="img/focus.png" style="width:20px;height:20px; margin-top: -5px; margin-left: -3px;">', function(btn, map){
+    //     var pwamk = [13.901111, 100.752778];
+    //     map.setView(pwamk);
+    // }).addTo( map );
+
+
+    L.easyButton('<img src="img/location-pin.png" style="width:20px;height:20px; margin-top: -5px; margin-left: -3px;">', function (btn, map) {
+
+    }).addTo(map);
+
+    L.easyButton('<img src="img/query.png" id = "show" style="width:20px;height:20px; margin-top: -5px; margin-left: -2px;">', function (btn, map) {
+
+    }).addTo(map);
+
+
+
+    var tmplatshare;
+    var tmplngshare;
+
+
+    function share_location(e) {
+        //alert('ok');
+        //e.latlng
+        console.log(e.latlng);
+        $('#txt_latlng_share').val(e.latlng.lat + ',' + e.latlng.lng);
+        //$('#txt_custcode_share').val();
+        $("#shareModal").modal('show');
+        map.off('click', share_location);
+        $('.leaflet-container').css('cursor', '');
+    }
+
+
+    L.control.custom({
+        id: 'ctrlShare',
+        title: 'แชร์ตำแหน่ง',
+        position: 'bottomleft',
+        content: '<img src="img/share-icon.png"  style="width: 32px; margin-top: 0px;">',
+
+        style:
+        {
+            margin: '0px 0px 0px 10px',
+            padding: '0',
+            cursor: 'pointer',
+        },
+        datas:
+        {
+            'foo': 'bar',
+        },
+        events:
+        {
+
+            click: function (data) {
+
+                //alert('click');
+                //map.off('click', stview);
+                //map.off('click', sheight);
+
+
+                //console.log(data.lat);
+
+                $('#txt_latlng_share').val('');
+                $('#txt_custcode_share').val('');
+                $('#txt_detail_share').val('');
+
+
+                $('#txt_latlng_share').attr('disabled', 'disabled');
+                $('#txt_custcode_share').attr('disabled', 'disabled');
+                $('#shareModal label:contains("Custcode:")').hide();
+                $('#txt_custcode_share').hide();
+
+                $('#txt_detail_share').attr('Placeholder', 'โปรดระมัดระวังการแชร์ข้อมูลส่วนบุคคล');
+
+                //map.on('click', function(e){alert(e.latlng.lat+','+e.latlng.lng);});
+                //map.on('click', function(e){/*alert(e.latlng.lat+','+e.latlng.lng);*/share_location1(e);});
+                map.on('click', share_location);
+                //map.on('click', function(e){tmplatshare=e.latlng.lat;tmplngshare=e.latlng.lng;share_location()});
+                //$("#shareModal").modal();
+                //map.on('click', share_location);
+                $('.leaflet-container').css('cursor', 'crosshair');
+
+
+            },
+            dblclick: function (data) {
+
+            },
+            contextmenu: function (data) {
+
+            },
+        }
+    })
+        .addTo(map);
+    //custom control------------------------------------------------------------------------------
+
+
+    var gMk;
+    function showPOINT(type) {
+        detailtmp = '';
+        if (gMk != null) {
+            gMk.clearLayers();
+            layerControl.removeLayer(gMk);
+            //map.removeLayer(gMk)
+            //layerControl.removeLayer(gMk);
+        }
+
+
+        $.ajax({
+            type: 'GET',
+            url: 'service/get_data.php',
+            async: false,
+            crossDomain: true,
+            dataType: 'json',
+            /*
+            data : {
+                act: 'qm'
+            },
+            */
+            //dataType: 'text',
+            //processData: false,
+            //contentType: false,
+            success: function (data) {
+                console.log(data);
+                gMk = new L.featureGroup();
+
+                $.each(data, function () {
+                    if ($.isNumeric(this.lat) == true && $.isNumeric(this.lng) == true) {
+                        var iconMaker = L.icon({
+                            iconUrl: 'img/info.png',
+                            iconSize: [30, 30], // size of the icon
+                            //iconAnchor: [5, 5], // point of the icon which will correspond to marker's location
+                            //popupAnchor: [0, -5] // point from which the popup should open relative to the iconAnchor'
+                        });
+                        var dt = "<span style='white-space: pre-wrap;white-space: -moz-pre-wrap;white-space: -pre-wrap;white-space: -o-pre-wrap;word-wrap: break-word;'>Detail: " + this.detail + "</span><br> ";
+                        var ed = "<button id = 'edit' onclick = 'editPOINT(\"" + this.id + "\",\"" + this.detail + "\")'>Edit</botton> ";
+                        var dl = "<button id = 'delete' onclick ='deletePOINT(\"" + this.id + "\")'>Delete</button> ";
+
+
+                        let mkmeter = new L.marker([this.lat, this.lng], { title: "พิกัด: " + this.lat + ',' + this.lng + '\nDetail: ' + this.detail, icon: iconMaker }).bindPopup('id: ' + this.id + '<br>' + dt + ed + dl);
+                        //let mkmeter = new L.marker([this.lat,this.lng],{title: "พิกัด: "+this.lat+','+this.lng, icon: iconMaker }).bindPopup('id: ' + this._id );
+                        gMk.addLayer(mkmeter);
+                    }
+                    else {
+                        alert('พบ latlng ผิดพลาด id-' + this.id + ': ' + this.lat + ',' + this.lng);
+                    }
+
+                });
+
+                //map.fitBounds(gMk.getBounds());
+                map.addLayer(gMk);
+                try {
+                    layerControl.removeLayer(gMk);
+                }
+                catch (error) {
+                    console.log('fail')
+                }
+
+                layerControl.addOverlay(gMk, "<img src='img/info.png' width='20' height='20'>&nbsp;&nbsp;ข้อมูลตำแหน่ง", 'ชั้นข้อมูล GIS');
+
+
+            }
+        });
+    }
+
+
+    function deletePOINT(id) {
+        //alert('id');
+        let text;
+        if (confirm("คุณต้องการจะลบ id: " + id + " ใช่ไหม") == true) {
+            text = "You pressed OK!";
+            $.ajax({
+                type: 'POST',
+
+                url: 'service/ade_data.php',
+                async: false,
+                crossDomain: true,
+                dataType: 'json',
+
+                data: { act: 'D', id: id },
+                //dataType: 'text',
+                //processData: false,
+                //contentType: false,
+                success: function (data) {
+                    console.log(data);
+                }
+            });
+            showPOINT('all');
+        } else {
+            text = "You canceled!";
+        }
+
+    }
+
+    var mkactive;
+    function editPOINT(id, detail) {
+        detailtmp = detail;
+        if (mkactive != null) {
+            map.removeLayer(mkactive)
+            //mkactive.removeFrom(map);
+        }
+
+        console.log('edit' + id);
+
+        $.each(gMk._layers, function (index, layer) {
+            //console.log( gMk._layers[layer._leaflet_id]._popup._content.id);
+            //console.log( gMk._layers[layer._leaflet_id]._popup._content);
+            var strId = gMk._layers[layer._leaflet_id]._popup._content.split("<button id =")[0].split("id: ")[1].split("<br>")[0];
+            var detailtxt = detail;
+
+            console.log(id, strId);
+
+            //gMk._layers[layer._leaflet_id].dragging.enable();
+
+            if (id == strId) {
+                //gmk.removeLayer(gMk._layers[layer._leaflet_id])
+                //gMk._layers[layer._leaflet_id].remove();
+                //gMk._layers[layer._leaflet_id].dragging.enable();
+
+
+                var ltln = `id: ${strId} <br><br>Lat: <input type='number' name='lat' id='lat' value=${gMk._layers[layer._leaflet_id]._latlng.lat} disabled><br>
+                         Lng: <input type='number' name='lng' id='lng' value=${gMk._layers[layer._leaflet_id]._latlng.lng} disabled><br> 
+             Detail: <input type='text' name='detail' id='detail' value='${detailtxt}'><br><br>
+                         <button id = 'Update' onclick = 'updatePOINT("${strId}","${gMk._layers[layer._leaflet_id]._latlng.lat}","${gMk._layers[layer._leaflet_id]._latlng.lng}")'>Update</button> 
+                         <button id = 'Remove' onclick = 'mkactive.removeFrom(map)'>Remove</button>`
+                //  <button id = 'Update' onclick ='updatePOINT("${strId}","${e.target._latlng.lat}","${e.target._latlng.lng}")'>Update</button>                        
+                //  <button id = 'Remove' onclick = 'map.removeLayer(e.target._map._layers[e.target._leaflet_id])'>Remove</botton> 
+
+                mkactive = L.marker([gMk._layers[layer._leaflet_id]._latlng.lat, gMk._layers[layer._leaflet_id]._latlng.lng]).addTo(map).bindPopup(ltln).openPopup();
+                mkactive.dragging.enable();
+                $("[name='detail']").keyup(function (event) {
+                    detailtmp = $("#detail").val();
+                });
+                mkactive.on('dragend', function (e) {
+                    console.log(e);
+                    //alert(e.target._latlng.lat,e.target._latlng.lng);
+                    //e.target._map._layers[e.target._leaflet_id].bindPopup(e.target._latlng.lat,e.target._latlng.lng).openPopup();
+                    console.log(e.target._map._layers[e.target._leaflet_id]);
+                    var popup = L.popup()
+                        //.setContent("I am a standalone popup.");
+                        .setContent(`id: ${strId} <br><br>Lat: <input type='number' name='lat' id='lat' value=${e.target._latlng.lat} disabled><br>
+                         Lng: <input type='number' name='lng' id='lng' value=${e.target._latlng.lng} disabled><br>
+             Detail: <input type='text' name='detail' id='detail' value='${detailtxt}'><br><br> 
+                         <button id = 'Update' onclick ='updatePOINT("${strId}","${e.target._latlng.lat}","${e.target._latlng.lng}")'>Update</button>                        
+                         <button id = 'Remove' onclick = 'map.removeLayer(mkactive)'>Remove</button>`);
+
+
+                    e.target._map._layers[e.target._leaflet_id].bindPopup(popup).openPopup();
+
+                    // map.removeLayer(e.target._map._layers[e.target._leaflet_id]) //remove marker
+
+                    $("[name='detail']").keyup(function (event) {
+                        detailtmp = $("#detail").val();
+                    });
+                });
+
+            }
+            else {
+                //gMk._layers[layer._leaflet_id].dragging.disable();
+            }
+
+        });
+
+    }
+
+
+    function updatePOINT(id, lat, lng) {
+        console.log('update submit');
+        detail = detailtmp;
+        /*
+        if(lat == '' || lng == ''){
+              alert('โปรดระบุพิกัด');
+              return;
+        }
+        else if ( $.isNumeric( lat ) != true || $.isNumeric( lng ) != true){
+              alert('โปรดระบุพิกัดให้ถูกต้อง');
+              return;
+        }
+        else{
+          */
+        $.ajax({
+            type: 'POST',
+            url: 'service/ade_data.php',
+            async: false,
+            crossDomain: true,
+            dataType: 'json',
+
+            data: { act: 'E', id: id, lat: lat, lng: lng, detail: detail },
+
+            //processData: false,
+            //contentType: false,
+            success: function (data) {
+                console.log(data);
+                if (data[0]['result'] == 'T') {
+                    //alert('อัพเดทสำเร็จ');
+                }
+                else {
+                    alert('อัพเดทไม่สำเร็จ');
+                }
+
+            }
+        });
+        map.removeLayer(mkactive); //เคลียร์ marker temp ออก
+        showPOINT('all');
+
+        //}
+    }
+
+    function addPOINT(lat, lng, detail) {
+        detail = detailtmp;
+        /*
+        if(lat == '' || lng == ''){
+              alert('โปรดระบุพิกัด');
+              return;
+        }
+        else if ( $.isNumeric( lat ) != true || $.isNumeric( lng ) != true){
+              alert('โปรดระบุพิกัดให้ถูกต้อง');
+              return;
+        }
+        else{
+          */
+        console.log('add');
+        mp.removeFrom(map);
+        $.ajax({
+            type: "POST",
+            async: false,
+            url: 'service/ade_data.php',
+            crossDomain: true,
+            //data: {act:layer,kwhere: $('#pipeType select option:selected').text(),kgroup:'group by pipetype',ksort: 'asc pipsize',kjoin: 'pwacode'},
+            //data: {act:layer,pipeSize: $('#pipeSize').find(":selected").val()},
+            //data: {act:layer, LAYING: LAYING },
+            data: { act: 'A', lat: lat, lng: lng, detail: detail },
+            dataType: "json",
+            success: function (resultData) {
+                console.log(resultData);
+            }
+        });
+        detailtmp = '';
+        //}
+        showPOINT('all');
+    }
+
+
+    $('#show').click(function () {
+        //alert('QueryMongo');
+        showPOINT('all');
+    });
+
+
+    showPOINT('all');
+
+
+
+    var state_btn_add = 0;
+    $("button img[src='img/location-pin.png']").click(function () {
+        detailtmp = '';
+        if (state_btn_add == 0) {
+            $('.leaflet-container').css('cursor', 'crosshair');
+            $("button img[src='img/location-pin.png']").parent().parent().css('outline', '2px red solid');
+
+            map.on('click', function (e) {
+
+
+                if (marker_arr.length > 0) {
+                    for (i = 0; i < marker_arr.length; i++) {
+                        map.removeLayer(marker_arr[i]);
+                    }
+                }
+
+                var ct = ` Lat: <input type='number' name='lat' id='lat' value=${e.latlng.lat} disabled><br>
+                    Lng: <input type='number' name='lng' id='lng' value=${e.latlng.lng} disabled><br>
+                    Detail: <input type='text' name='detail' id='detail' value='${detailtmp}' ><br><br>
+                    <button onclick="addPOINT('${e.latlng.lat}','${e.latlng.lng}','')">Add</button>                          
+                    <button onclick="map.removeLayer(mp)">Remove</button>`;
+
+                mp = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map).bindPopup(ct).openPopup();
+                marker_arr.push(mp);
+
+                $("[name='detail']").keyup(function (event) {
+                    detailtmp = $("#detail").val();
+                });
+
+
+            });
+
+            //alert('เปิดฟังก์ชันการเพิ่มจุด');
+            state_btn_add = 1;
+        }
+        else {
+            $('.leaflet-container').css('cursor', '');
+            $("button img[src='img/location-pin.png']").parent().parent().css('outline', '');
+            map.off('click');
+            //alert('ปิดฟังก์ชันการเพิ่มจุด');
+            state_btn_add = 0;
+            if (mp != null) {
+                mp.removeFrom(map);
+            }
+        }
+    });
+
+    $("[name='detail']").keyup(function (event) {
+        detailtmp = $("#detail").val();
+    });
+
+    // $( document ).ready(function() {
+
+    // });
+
+
+    // (function() {
+
+
+    // }());
+
+    //addlistener
+
+
+    map.on('zoomend', function (e) {
+        console.log("zoom", map.getZoom());
+        map.invalidateSize();
+    });
+    map.on('dragend', function (e) {
+        map.invalidateSize();
+    });
+
+
+    // //Please Add the Script to Disable pinch, tap, focus Zoom
+    // document.addEventListener('touchmove', function (event) {
+    //   if (event.scale !== 1) { event.preventDefault(); }
+    // }, { passive: false });
+
+
+    // if( navigator.userAgent.match(/Windows NT/i) || navigator.platform.indexOf('Win') > -1){
+
+    // }
+    // else if( (navigator.userAgent.match(/Macintosh|MacOS|Mac/i) && (('ontouchstart' in document.documentElement) == false ||'ontouchstart' in window == false) ) || 
+    // 	(navigator.platform === 'MacIntel' && navigator.maxTouchPoints <= 0)){
+
+    // }
+    // else if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+    // 	(navigator.userAgent.match(/Macintosh|iPad/i) && (('ontouchstart' in document.documentElement) == true ||'ontouchstart' in window == true)) || 
+    // 	((navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 0) || navigator.platform === 'iPad')) {
+    // 	$('img[src="img/focus.png"]').css('margin-left','-7px');
+    // 	$('img[src="img/focus.png"]').css('margin-top','2px');
+
+    // 	$('img[src="img/location-pin.png"]').css('margin-left','-7px');
+    // 	$('img[src="img/query.png"]').css('margin-left','-7px');
+
+    // 	googleRoad.setOpacity(0.7);
+    // 	googleTerrain.setOpacity(0.7);
+    // 	googleSat.setOpacity(0.7);
+    // 	googleHybrid.setOpacity(0.7);
+
+    // }
+    // else{
+
+    // }
+
+    map.on('click', function (e) {
+        console.log(e.latlng); // e is an event object (MouseEvent in this case)
+    });
+
+</script>
+
+
+
+<script>
+
+    var fileReader = new FileReader();
+    var filterType = /^(?:image\/bmp|image\/cis\-cod|image\/gif|image\/ief|image\/jpeg|image\/jpeg|image\/jpeg|image\/pipeg|image\/png|image\/svg\+xml|image\/tiff|image\/x\-cmu\-raster|image\/x\-cmx|image\/x\-icon|image\/x\-portable\-anymap|image\/x\-portable\-bitmap|image\/x\-portable\-graymap|image\/x\-portable\-pixmap|image\/x\-rgb|image\/x\-xbitmap|image\/x\-xpixmap|image\/x\-xwindowdump)$/i;
+
+    fileReader.onload = function (event) {
+
+        var preview = document.querySelector('img[name="imgFace"]');
+        var image = new Image();
+
+        image.onload = function () {
+            // document.getElementById("original-Img").src = image.src;
+            var canvas = document.createElement("canvas");
+            var context = canvas.getContext("2d");
+            const width = 350; // set your width
+            const scaleFactor = width / image.width;
+            canvas.width = width;
+            canvas.height = image.height * scaleFactor;
+            context.drawImage(image, 0, 0, width, image.height * scaleFactor);
+            preview.src = canvas.toDataURL("image/jpeg");
+        }
+        image.src = event.target.result;
+    };
+
+
+    // function previewFile() {
+    //     var preview = document.querySelector('img[name="imgFace"]');
+    //     var file = document.querySelector('input[type=file][name="imgFace"]').files[0];
+
+    //     if (file.type.match('image/jpeg') || file.type.match('image/jpg')) {
+    //         var reader = new FileReader();
+
+    //         reader.onload = function (event) {
+    //             var image = new Image();
+    //             image.onload = function () {
+    //                 document.getElementById("imgFace").src = image.src;
+    //                 var canvas = document.createElement("canvas");
+    //                 var context = canvas.getContext("2d");
+    //                 const width = 400; // set your width
+    //                 const scaleFactor = width / image.width;
+    //                 canvas.width = width;
+    //                 canvas.height = image.height * scaleFactor;
+    //                 context.drawImage(image, 0, 0, width, image.height * scaleFactor);
+    //                 preview.src = canvas.toDataURL("image/jpeg");
+    //             }
+    //             image.src = event.target.result;
+    //         }
+
+
+    //         // var reader = new FileReader();
+    //         // reader.onload = function (readerEvent) {
+    //         //     var image = new Image();
+    //         //     image.onload = function (imageEvent) {
+    //         //         // Resize the image
+    //         //         var canvas = document.createElement('canvas'),
+    //         //             max_size = 120,// TODO : pull max size from a site config
+    //         //             width = image.width,
+    //         //             height = image.height;
+    //         //         if (width > height) {
+    //         //             if (width > max_size) {
+    //         //                 height *= max_size / width;
+    //         //                 width = max_size;
+    //         //             }
+    //         //         } else {
+    //         //             if (height > max_size) {
+    //         //                 width *= max_size / height;
+    //         //                 height = max_size;
+    //         //             }
+    //         //         }
+    //         //         canvas.width = width;
+    //         //         canvas.height = height;
+    //         //         canvas.getContext('2d').drawImage(image, 0, 0, width, height);
+    //         //         var dataUrl = canvas.toDataURL('image/jpeg');
+    //         //         var resizedImage = dataURLToBlob(dataUrl);
+    //         //         $.event.trigger({
+    //         //             type: "imageResized",
+    //         //             blob: resizedImage,
+    //         //             url: dataUrl
+    //         //         });
+    //         //     }
+    //         //     image.src = readerEvent.target.result;
+    //         //     preview.src = reader.result;
+    //         // }
+
+
+    //         // // reader.onloadend = function () {
+    //         // //     preview.src = reader.result;
+    //         // // }
+
+    //         // if (file) {
+    //         //     reader.readAsDataURL(file);
+    //         // } else {
+    //         //     preview.src = "";
+    //         // }
+    //     } else {
+    //         alert('ขออภัยประเภทไฟล์ไม่ถูกต้อง')
+    //     }
+    // }
+
+    var previewFile = function () {
+        var uploadImage = document.getElementById("imgFace");
+
+        if (uploadImage.files.length === 0) {
+            return;
+        }
+
+        var uploadFile = document.getElementById("imgFace").files[0];
+        if (!uploadFile.type.match('image/jpeg')) {
+            alert('ขออภัยประเภทไฟล์ไม่ถูกต้อง');
+            return;
+        }
+
+        fileReader.readAsDataURL(uploadFile);
+    }
+
+    $('#btn_facedetect').click(function () {
+        var preview = document.querySelector('img[name="imgFace"]');
+
+        var file_data = $('#imgFace').prop('files')[0];
+        var form_data = new FormData();
+        form_data.append('file', file_data);
+        $.ajax({
+            url: './service/aiforthai_face.php',
+            dataType: 'text',
+            cache: false,
+            contentType: false,
+            processData: false,
+            data: form_data,
+            type: 'POST',
+            success: function (php_script_response) {
+                preview.src = ''
+                if (php_script_response != '' && php_script_response != null) {
+                    preview.src = './img/imgFace/' + php_script_response;
+                }
+                console.log(php_script_response);
+
+            }
+        });
+    })
+
+
+    $('#send_share').click(function () {
+
+        /*
+            let str = "11480121061";
+            let enc = btoa(str);
+            console.log(enc); // Outputs: "SGVsbG8gUGVvcGxl"
+            let dec = atob(enc);
+            console.log(dec); // Outputs: "Hello People"
+        */
+
+        var latlng_share = $('#txt_latlng_share').val();
+        var custcode_share = $('#txt_custcode_share').val();
+        var detail_share = $('#txt_detail_share').val();
+
+
+        $.ajax({
+            type: 'POST',
+            url: './service/shareToLine.php',
+            // async:false,
+            dataType: 'json',
+            //dataType: 'text',
+            //processData: false,
+            // contentType: false,
+            data: { latlng: latlng_share, mid: custcode_share, detail: detail_share },
+            success: function (data) {
+            }
+        });
+        custcode_share = btoa($('#txt_custcode_share').val());
+        //alert(custcode_share);
+
+        var url_line = 'https://lineit.line.me/share/ui?url=';
+
+
+        var detail = ww + '#latlng=' + latlng_share + '&mid=' + custcode_share + '&detail=' + detail_share;
+        //var detail = 'https://gisweb1.pwa.co.th/meterstat/app.html?latlng=' + latlng_share + '&mid=' + custcode_share + '&detail=' + detail_share;
+
+        var url_encode = encodeURIComponent(detail);
+
+        var url_use = url_line + url_encode;
+
+        //alert(url);
+        //var url = 'https://lineit.line.me/share/ui?url=https://gisweb1.pwa.co.th/meterstat/app_test.html?detail='+detail_share+'&latlng='+latlng_share+'&custcode='+custcode_share
+        //var url = 'https://lineit.line.me/share/ui?url=https%3A%2F%2Fideagital.com%2Fblog%2Fhowto_make_social_share_url';
+        var tmpw = window.open(url_use, '_blank');
+
+
+        $('#shareModal').modal('hide');
+        //count_function(6);
+
+
+    });
+
+    var sURL = window.location.href;
+    var ww = window.location.href;
+    //	console.log(sURL);
+    if (sURL.indexOf("#") > 0) {
+
+        var url = decodeURIComponent(sURL);
+        //console.log(getURLParameters('data'));
+        //var url = decodeURIComponent(getURLParameters('data'));
+        ww = (url.split('#')[0]);
+
+        var latlng_share = (url.split('latlng=')[1]).split('&mid=')[0];
+        var custcode_share = (url.split('&mid=')[1]).split('&detail=')[0];
+        var detail_share = url.split('&detail=')[1];
+
+        //console.log(latlng_share);
+        //console.log(custcode_share);
+        //console.log(detail_share);
+
+        var lat = latlng_share.split(',')[0];
+        var lng = latlng_share.split(',')[1];
+
+        var boxes = [];
+        boxes.push(lat);
+        boxes.push(lng);
+
+        //var navi_share = window.open('https://www.google.co.th/maps/dir//'+latlng_share+'/@'+latlng_share+',11z/data=!4m2!4m1!3e2?hl=th');
+        var html = '';
+
+        html += '<div class="row" style="padding-top:0px;padding-bottom:5px;">';
+        html += '<div class="col-xs-6" style="padding-right: 2px;padding-left: 14px;">';
+        if (custcode_share != '') {
+            html += '<b>รหัสผู้ใช้น้ำ:</b> <br>' + custcode_share + '<br>';
+        }
+        else {
+            //html+='<br>';
+        }
+        html += '</div>';
+
+        html += '<div class="sharebtn col-xs-6" style="padding-right: 14px;padding-left: 14px;">';
+
+
+        html += '<a ><button  type="button" class="btn btn-sm btn-default pull-right"  title="ลบ" style="height: 35px; width: 35px; margin-top: -6px; display: inline;" onclick="map.removeLayer(share_location); map.closePopup();"><i class="fa fa-trash fa-lg" aria-hidden="true"></i></button></a>';
+
+        html += '<a  href=' + '"https://www.google.co.th/maps/dir//' + latlng_share + '/@' + latlng_share + ',11z/data=!4m2!4m1!3e0?hl=th' + '"' + ' target="_blank" ><button  type="button" class="btn btn-sm btn-default pull-right"  title="นำทาง" style="height: 35px; width: 35px; margin-top: -6px; display: inline;"><img src="img/google.png"  style ="margin-left: -2px; width: 19px;"/></button></a>';
+
+        html += '</div>';
+
+        html += '</div>';
+
+        html += '<div class="row" style="padding-right: 14px;padding-left: 14px;width:200px">';
+        html += '<b>รายละเอียด:</b> <br><span style="white-space: pre-wrap;white-space: -moz-pre-wrap;white-space: -pre-wrap;white-space: -o-pre-wrap;word-wrap: break-word;">' + detail_share + '</span>';
+        html += '</div>'
+        //map.setView([parseFloat(lat), parseFloat(lng)], 15);
+        try {
+            map.setView([lat, lng], 9);
+            var share_location = new L.marker(boxes).addTo(map).bindPopup(html).openPopup();
+        }
+        catch (error) {
+
+        }
+    }
+    else {
+
+
+    }
+
+</script>
+
+
+<script>
+    //.replace(/[\-\:\.]/g, '')
+
+
+    $('#check_txt').on('click', function () {
+        if ($('#txt_detail_share').val() != '') {
+
+            check_txt($('#txt_detail_share').val())
+        }
+
+    })
+
+    function check_txt(txt) {
+
+        $.ajax({
+            type: 'GET',
+            //url:'aiforthai.php?msg='+txt,
+            url: 'service/aiforthai.php?msg=' + txt,
+            //url:'https://myapi.infinityfreeapp.com/aiforthai.php?msg='+txt,
+
+            async: false,
+            crossDomain: true,
+            //dataType: 'jsonp',
+
+            success: function (data) {
+                console.log(data)
+                alert(data[0]['text']);
+            }
+        })
+
+
+
+    }
+
+
+    $("#send_problem").click(function (e) {
+
+        if ($("#sys_type").val() == "0") {
+            alert("โปรดเลือกหัวข้อ");
+        }
+        else if ($("#txt_detail").val() == "") {
+            alert("โปรดระบุรายละเอียด");
+        }
+        else {
+            $("#send_problem").attr('disabled', 'disabled');
+            $.post('service/problem.php', { device: navigator.userAgent, type: $("#sys_type").text(), detail: $("#txt_detail").val() }, function (data, status) { $("#helpdeskModal").modal('hide'); $("#send_problem").removeAttr('disabled'); });
+        }
+
+    });
+
+
+
+
+</script>
+
+
+
+<script>
+    var interval_getshare = null;
+    var mkshare;
+    $("#flexSwitchCheckShare").change(function () {
+        //console.log($(this));
+        if ($('#flexSwitchCheckShare').prop('checked') == true) {
+            $('#timeintervalGetShare').attr('disabled', 'disabled');
+            interval_getshare = setInterval(getsharelocation, ($('#timeintervalGetShare').val() * 1000)); // millisec 1 minute = 60 seconds = 60 × 1000 milliseconds = 60,000 ms.
+        }
+        else if ($('#flexSwitchCheckShare').prop('checked') == false) {
+            clearInterval(interval_getshare); // stop the interval
+            $('#timeintervalGetShare').removeAttr('disabled');
+            try {
+                mkshare.clearLayers();
+                mkshare.removeFrom(map);
+                layerControl.removeLayer(mkshare);
+
+            }
+            catch (err) {
+
+            }
+        }
+    });
+
+    $("#flexSwitchShare").change(function () {
+        if ($('#flexSwitchShare').prop('checked') == true) {
+            lc.start();
+        }
+        else if ($('#flexSwitchShare').prop('checked') == false) {
+            lc.stop();
+            updatelocation('Offine', '-', '-', '-', '-');
+        }
+    });
+
+
+    function updatelocation(status, lat, lng, accuracy, timestamp) {
+        console.log('Share status: ' + status + ' acc: ' + accuracy);
+        if (accuracy == null) {
+            accuracy = '-';
+        }
+
+        if ($('#flexSwitchShare').prop('checked') == true && status == 'Online') {
+
+            $.ajax({
+                type: 'POST',
+                url: './service/sharelocation.php',
+                async: false,
+                dataType: 'json',
+                data: { act: "up", status: status, lat: lat, lng: lng, accuracy: accuracy, timestamp: timestamp, by: $('#username').val() },
+                //dataType: 'text',
+                //processData: false,
+                // contentType: false,
+                success: function (data) {
+
+                }
+            });
+        }
+        else if (($('#flexSwitchShare').prop('checked') == true || $('#flexSwitchShare').prop('checked') == false) && status == 'Offine') {
+
+            $.ajax({
+                type: 'POST',
+                url: './service/sharelocation.php',
+                async: false,
+                dataType: 'json',
+                data: { act: "del", status: status, lat: lat, lng: lng, accuracy: accuracy, timestamp: timestamp, by: $('#username').val() },
+                //dataType: 'text',
+                //processData: false,
+                // contentType: false,
+                success: function (data) {
+
+                }
+            });
+        }
+
+
+        else {
+
+
+        }
+
+    }
+
+    function getsharelocation() {
+
+        if (mkshare != null) {
+            mkshare.clearLayers();
+            map.removeLayer(mkshare)
+            layerControl.removeLayer(mkshare);
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: './service/sharelocation.php',
+            async: false,
+            dataType: 'json',
+            data: { act: 'get' },
+
+            //dataType: 'text',
+            //processData: false,
+            // contentType: false,
+            success: function (data) {
+                //console.log(data);
+
+                mkshare = new L.featureGroup();
+
+                $.each(data, function () {
+                    var iconMaker = L.icon({
+                        iconUrl: 'img/share.png',
+                        iconSize: [30, 30], // size of the icon
+                        //iconAnchor: [5, 5], // point of the icon which will correspond to marker's location
+                        //popupAnchor: [0, -5] // point from which the popup should open relative to the iconAnchor'
+                    });
+
+                    let mk = new L.marker([this.lat, this.lng], { title: "พิกัด: " + this.lat + ',' + this.lng + '(accuracy: ' + this.accuracy + ')' + '\nid: ' + this.id + '\nstatus: ' + this.status + '\ndate: ' + this.date, icon: iconMaker }).bindPopup('id: ' + this.id + '<br>status: ' + this.status + '<br>date: ' + this.date);
+                    //let mkmeter = new L.marker([this.lat,this.lng],{title: "พิกัด: "+this.lat+','+this.lng, icon: iconMaker }).bindPopup('id: ' + this._id );
+                    mkshare.addLayer(mk);
+                    mkshare.addTo(map);
+                });
+
+                layerControl.addOverlay(mkshare, "<img src='img/share.png' width='17' height='17'>&nbsp;&nbsp;ตำแหน่ง Online", 'Share Location');
+            }
+        });
+
+        //map.fitBounds(mkshare.getBounds());
+    }
+
+
+</script>
+
+</html>
